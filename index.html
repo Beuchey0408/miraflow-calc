@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur — MiraFlow</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand:#5D1C3F; --brand-mid:#7a2552; --brand-light:#a03a70;
+  --brand-pale:rgba(93,28,63,0.08); --brand-border:rgba(93,28,63,0.2);
+  --bg:#EDEBE6; --surface:#fff; --surface-2:#f5f3ee;
+  --border:rgba(93,28,63,0.15); --text:#1a0d13; --muted:#7a6470;
+  --faint:rgba(93,28,63,0.06);
+}
+html,body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased; }
+.wrap { max-width:520px; margin:0 auto; padding:36px 20px 64px; }
+.logo { font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--brand-light); margin-bottom:22px; }
+.logo b { color:var(--brand); }
+h1 { font-size:26px; font-weight:700; line-height:1.25; color:var(--brand); margin-bottom:10px; }
+.subtitle { font-size:14px; color:var(--muted); line-height:1.65; margin-bottom:28px; }
+
+.card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px 16px; margin-bottom:10px; box-shadow:0 1px 4px rgba(93,28,63,.06); }
+.card-lbl { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light); margin-bottom:12px; }
+
+.choices { display:flex; gap:8px; flex-wrap:wrap; }
+.ch { flex:1; min-width:68px; padding:12px 8px; border-radius:10px; border:1.5px solid var(--border); background:var(--surface-2); color:var(--muted); font-size:14px; font-weight:500; font-family:inherit; cursor:pointer; transition:all .15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; text-align:center; }
+.ch:hover { border-color:var(--brand-mid); color:var(--brand); }
+.ch.on { border-color:var(--brand); background:var(--brand); color:#fff; font-weight:700; box-shadow:0 2px 8px rgba(93,28,63,.25); }
+
+.tog-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--faint); }
+.tog-row:last-child { border-bottom:none; padding-bottom:0; }
+.tog-row:first-child { padding-top:0; }
+.tog-lbl { font-size:14px; color:var(--text); }
+.tog { width:46px; height:26px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface-2); cursor:pointer; position:relative; transition:all .2s; flex-shrink:0; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+.tog.on { background:var(--brand); border-color:var(--brand); box-shadow:0 2px 8px rgba(93,28,63,.25); }
+.tog::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--muted); transition:left .18s,background .18s; pointer-events:none; }
+.tog.on::after { left:22px; background:#fff; }
+
+.ages { display:flex; flex-direction:column; gap:9px; margin-top:14px; }
+.age-row { display:flex; align-items:center; gap:10px; }
+.age-lbl { font-size:13px; color:var(--muted); min-width:62px; }
+select { flex:1; background:var(--surface-2); color:var(--text); border:1.5px solid var(--border); border-radius:8px; padding:9px 30px 9px 12px; font-size:13px; font-family:inherit; cursor:pointer; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235D1C3F'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
+select option { background:#fff; color:#1a0d13; }
+
+.pet-extra { margin-top:12px; padding-top:12px; border-top:1px solid var(--faint); }
+.pet-sub { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--brand-light); margin-bottom:8px; }
+
+.btn-go { width:100%; padding:16px; background:var(--brand); color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:700; font-family:inherit; cursor:pointer; margin-top:10px; transition:opacity .15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; box-shadow:0 4px 16px rgba(93,28,63,.3); }
+.btn-go:active { opacity:.82; }
+
+.result { display:none; }
+.result.show { display:block; }
+.form-wrap.gone { display:none; }
+
+.score-box { background:var(--brand); border-radius:16px; padding:32px 20px; text-align:center; margin-bottom:10px; box-shadow:0 4px 24px rgba(93,28,63,.3); }
+.sc-eye { font-size:13px; color:rgba(255,255,255,.6); margin-bottom:6px; }
+.sc-num { font-size:96px; font-weight:900; line-height:1; color:#fff; letter-spacing:-5px; margin-bottom:4px; }
+.sc-lbl { font-size:18px; font-weight:600; color:rgba(255,255,255,.9); margin-bottom:14px; }
+.sc-emotion { background:rgba(255,255,255,.12); border-radius:10px; padding:13px 16px; font-size:15px; font-weight:600; color:#fff; line-height:1.55; font-style:italic; }
+
+.insight { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; box-shadow:0 1px 4px rgba(93,28,63,.06); }
+.ins-title { font-size:14px; font-weight:700; color:var(--brand); margin-bottom:5px; }
+.ins-body { font-size:13px; color:var(--muted); line-height:1.65; }
+
+.sec-lbl { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light); margin:20px 0 10px; }
+
+.cat { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:8px; box-shadow:0 1px 3px rgba(93,28,63,.05); }
+.cat-head { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid var(--faint); background:var(--surface-2); }
+.cat-name { font-size:14px; font-weight:600; color:var(--brand); }
+.cat-n { font-size:11px; font-weight:700; color:#fff; background:var(--brand); border-radius:999px; padding:2px 10px; margin-left:8px; white-space:nowrap; }
+.cat-item { display:flex; justify-content:space-between; align-items:flex-start; padding:9px 14px; border-bottom:1px solid var(--faint); gap:8px; }
+.cat-item:last-child { border-bottom:none; }
+.it-name { font-size:12px; color:var(--muted); flex:1; line-height:1.4; }
+.it-freq { font-size:11px; color:var(--brand-light); white-space:nowrap; text-align:right; opacity:.7; }
+
+.pitch { background:var(--surface); border:1.5px solid var(--brand-border); border-radius:16px; padding:24px 18px; margin:14px 0 10px; box-shadow:0 2px 12px rgba(93,28,63,.08); }
+.pitch-title { font-size:16px; font-weight:700; color:var(--brand); margin-bottom:10px; line-height:1.4; }
+.pitch-body { font-size:13px; color:var(--muted); line-height:1.7; margin-bottom:20px; }
+
+.checks { display:flex; justify-content:space-around; margin-bottom:20px; }
+.chk { text-align:center; }
+.chk-ico { width:36px; height:36px; border-radius:50%; background:var(--brand-pale); border:1px solid var(--brand-border); display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-size:15px; color:var(--brand); }
+.chk-txt { font-size:11px; color:var(--muted); font-weight:500; }
+
+.price { text-align:center; padding:16px; background:var(--surface-2); border-radius:10px; margin-bottom:16px; }
+.price-main { font-size:28px; font-weight:900; color:var(--brand); }
+.price-trial { display:inline-block; background:var(--brand); color:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; margin:6px 0 4px; letter-spacing:.04em; }
+.price-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+
+.dl-buttons { display:flex; flex-direction:column; gap:10px; }
+.btn-dl { width:100%; padding:14px 16px; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:opacity .15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; border:none; }
+.btn-ios { background:var(--brand); color:#fff; box-shadow:0 4px 16px rgba(93,28,63,.3); }
+.btn-android { background:transparent; color:var(--brand); border:1.5px solid var(--brand); }
+.btn-dl:active { opacity:.8; }
+
+.btn-back { width:100%; padding:13px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:10px; font-size:14px; font-family:inherit; cursor:pointer; margin-top:8px; transition:all .15s; -webkit-tap-highlight-color:transparent; }
+.btn-back:hover { color:var(--brand); border-color:var(--brand); }
+
+.email-capture { background:var(--surface); border:1.5px solid var(--brand-border); border-radius:16px; padding:22px 18px; margin-bottom:10px; box-shadow:0 2px 12px rgba(93,28,63,.08); }
+.email-title { font-size:16px; font-weight:700; color:var(--brand); margin-bottom:6px; line-height:1.4; }
+.email-sub { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:16px; }
+.email-row { margin-bottom:10px; }
+.email-row input[type="email"] { width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; font-family:inherit; outline:none; transition:border-color .15s; }
+.email-row input[type="email"]:focus { border-color:var(--brand); }
+.email-row input[type="email"]::placeholder { color:var(--muted); }
+.email-row select { width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; font-family:inherit; -webkit-appearance:none; appearance:none; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235D1C3F'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+.btn-email { width:100%; padding:14px; background:var(--brand); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; margin-top:4px; transition:opacity .15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+.btn-email:active { opacity:.82; }
+.email-success { text-align:center; padding:20px; }
+.success-icon { font-size:32px; color:var(--brand); margin-bottom:8px; }
+.success-text { font-size:15px; font-weight:600; color:var(--brand); }
+
+@media(min-width:600px){
+  .wrap { padding:48px 32px 80px; }
+  h1 { font-size:30px; }
+  .sc-num { font-size:110px; }
+  .dl-buttons { flex-direction:row; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="form-wrap" id="F">
+    <div class="logo">MIRA <b>FLOW</b></div>
+    <h1>Combien d'échéances portez-vous dans la tête ?</h1>
+    <p class="subtitle">Répondez en 30 secondes. Le résultat va vous surprendre.</p>
+
+    <div class="card">
+      <div class="card-lbl">Votre situation</div>
+      <div class="choices" id="g-couple">
+        <button class="ch on" data-v="solo">Je gère seul(e)</button>
+        <button class="ch" data-v="couple">En couple</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-lbl">Nombre d'enfants</div>
+      <div class="choices" id="g-kids">
+        <button class="ch on" data-v="0">0</button>
+        <button class="ch" data-v="1">1</button>
+        <button class="ch" data-v="2">2</button>
+        <button class="ch" data-v="3">3</button>
+        <button class="ch" data-v="4">4+</button>
+      </div>
+      <div class="ages" id="agesBox"></div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">Votre quotidien</div>
+      <div class="tog-row">
+        <span class="tog-lbl">Vous avez une voiture</span>
+        <button class="tog on" id="t-car"></button>
+      </div>
+      <div class="tog-row">
+        <span class="tog-lbl">Vous avez un animal</span>
+        <button class="tog" id="t-pet"></button>
+      </div>
+      <div id="petBox" style="display:none;">
+        <div class="pet-extra">
+          <div class="pet-sub">Type d'animal</div>
+          <div class="choices" id="g-pet">
+            <button class="ch on" data-v="cat">Chat / lapin</button>
+            <button class="ch" data-v="dog">Chien</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-go" id="btnGo">Calculer ma charge mentale →</button>
+  </div>
+
+  <div class="result" id="R">
+    <div class="logo">MIRA <b>FLOW</b></div>
+    <div class="score-box">
+      <div class="sc-eye">Vous portez mentalement</div>
+      <div class="sc-num" id="sNum">—</div>
+      <div class="sc-lbl">échéances par an</div>
+      <div class="sc-emotion">Ce chiffre, c'est ce que vous portez en silence.<br>Chaque jour. Même les jours où vous êtes épuisé(e).</div>
+    </div>
+    <div class="insight">
+      <div class="ins-title">Ce que ce chiffre représente vraiment</div>
+      <div class="ins-body" id="insBody"></div>
+    </div>
+    <div class="email-capture" id="emailCapture">
+      <div class="email-title">Voir le détail de vos échéances</div>
+      <div class="email-sub">Laissez votre email pour débloquer le détail complet par catégorie et découvrir comment MiraFlow peut prendre tout ça en charge à votre place.</div>
+      <form id="leadForm" action="https://formspree.io/f/maqlpwdb" method="POST">
+        <input type="hidden" name="score" id="hiddenScore" value="">
+        <input type="hidden" name="situation" id="hiddenSituation" value="">
+        <div class="email-row">
+          <input type="email" name="email" id="emailInput" placeholder="Votre adresse email" required>
+        </div>
+        <div class="email-row">
+          <select name="source" id="sourceInput">
+            <option value="" disabled selected>Vous avez découvert MiraFlow via...</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+            <option value="site">Directement sur le site</option>
+            <option value="bouche_a_oreille">Bouche à oreille</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-email">Débloquer le détail →</button>
+      </form>
+      <div class="email-success" id="emailSuccess" style="display:none;">
+        <div class="success-icon">✓</div>
+        <div class="success-text">C’est envoyé. Découvrez votre bilan complet.</div>
+      </div>
+    </div>
+
+    <div class="sec-lbl" id="detailLabel" style="display:none;">Le détail par catégorie</div>
+    <div id="detail"></div>
+    <div class="pitch">
+      <div class="pitch-title">MiraFlow prend en charge tout ça à votre place.</div>
+      <div class="pitch-body">Vous notez une responsabilité une seule fois. MiraFlow calcule la prochaine échéance et vous prévient avant qu'il soit trop tard. Vous agissez quand vous êtes prêt(e). Et cette chose disparaît de votre tête, jusqu'à la prochaine fois. Sans effort. Sans y penser.</div>
+      <div class="checks">
+        <div class="chk"><div class="chk-ico">✓</div><div class="chk-txt">Note une fois</div></div>
+        <div class="chk"><div class="chk-ico">🔔</div><div class="chk-txt">Prévient avant</div></div>
+        <div class="chk"><div class="chk-ico">↩</div><div class="chk-txt">Recalcule</div></div>
+      </div>
+      <div class="price">
+        <div class="price-main">59,99€ / an</div>
+        <div><span class="price-trial">2 semaines offertes</span></div>
+        <div class="price-sub">Sans engagement — résiliable à tout moment</div>
+      </div>
+      <div class="dl-buttons">
+        <a class="btn-dl btn-ios" href="https://apps.apple.com/fr/app/miraflow/id6755115717" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          App Store
+        </a>
+        <a class="btn-dl btn-android" href="https://play.google.com/store/apps/details?id=com.miraflow.freemindapp&hl=fr_CH&pli=1" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76c.3.17.64.19.96.07l12.45-7.19-2.78-2.78-10.63 9.9zM.49 1.46C.18 1.77 0 2.24 0 2.85v18.3c0 .61.18 1.08.49 1.39l.07.07 10.25-10.25v-.24L.56 1.39l-.07.07zm20.65 9.36l-2.91-1.68-3.07 3.07 3.07 3.07 2.93-1.69c.84-.48.84-1.27-.02-1.77zM4.14.24l12.45 7.19-2.78 2.78L3.18.31c.32-.12.67-.1.96.07v-.14z"/></svg>
+          Google Play
+        </a>
+      </div>
+    </div>
+    <button class="btn-back" id="btnBack">← Recalculer</button>
+  </div>
+</div>
+<script>
+!function(){
+  var S={couple:'solo',kids:0,ages:[],car:true,pet:false,petType:'cat'};
+  function grp(id,key,cb){
+    var bs=document.getElementById(id).querySelectorAll('.ch');
+    bs.forEach(function(b){
+      function act(e){e.preventDefault();bs.forEach(function(x){x.classList.remove('on');});b.classList.add('on');S[key]=b.getAttribute('data-v');if(cb)cb();}
+      b.addEventListener('click',act);b.addEventListener('touchend',act);
+    });
+  }
+  grp('g-couple','couple');
+  grp('g-kids','kids',buildAges);grp('g-pet','petType');
+  function tog(id,key,cb){
+    var btn=document.getElementById(id);
+    function act(e){e.preventDefault();S[key]=!S[key];S[key]?btn.classList.add('on'):btn.classList.remove('on');if(cb)cb(S[key]);}
+    btn.addEventListener('click',act);btn.addEventListener('touchend',act);
+  }
+  tog('t-car','car');tog('t-pet','pet',function(v){document.getElementById('petBox').style.display=v?'block':'none';});
+  function buildAges(){
+    var n=parseInt(S.kids)||0;S.kids=n;
+    while(S.ages.length<n)S.ages.push('school');S.ages=S.ages.slice(0,n);
+    var box=document.getElementById('agesBox');box.innerHTML='';
+    for(var i=0;i<n;i++){(function(i){
+      var row=document.createElement('div');row.className='age-row';
+      var lbl=document.createElement('span');lbl.className='age-lbl';lbl.textContent='Enfant '+(i+1);
+      var sel=document.createElement('select');
+      [['baby','0 – 3 ans'],['small','4 – 6 ans'],['school','7 – 10 ans'],['teen','11 – 17 ans']].forEach(function(o){
+        var op=document.createElement('option');op.value=o[0];op.textContent=o[1];if(S.ages[i]===o[0])op.selected=true;sel.appendChild(op);
+      });
+      sel.addEventListener('change',function(){S.ages[i]=sel.value;});
+      row.appendChild(lbl);row.appendChild(sel);box.appendChild(row);
+    })(i);}
+  }
+  function compute(){
+    document.querySelectorAll('select').forEach(function(s,i){if(i<S.ages.length)S.ages[i]=s.value;});
+    var cats=[],tot=0;
+    function cat(name,items){var t=0;items.forEach(function(x){t+=x.c;tot+=x.c;});cats.push({name:name,items:items,t:t});}
+
+    // Santé vous
+    cat('\u{1f3e5} Sant\u00e9 \u2014 vous',[
+      {n:'Dentiste (vous)',c:1,f:'1\u00d7/an'},
+      {n:'Gyn\u00e9cologue / suivi contraception',c:0.5,f:'1\u00d7/2 ans'},
+      {n:'M\u00e9decin traitant',c:0.5,f:'1\u00d7/2 ans'},
+      {n:'Ophtalmo',c:0.5,f:'1\u00d7/2 ans'},
+      {n:'Rappel vaccin DTP (adulte)',c:0.1,f:'1\u00d7/10 ans'}
+    ]);
+
+    // Santé partenaire (si couple)
+    if(S.couple==='couple'){
+      cat('\u{1f3e5} Sant\u00e9 \u2014 partenaire',[
+        {n:'Dentiste (partenaire)',c:1,f:'1\u00d7/an'},
+        {n:'M\u00e9decin traitant (partenaire)',c:0.5,f:'1\u00d7/2 ans'},
+        {n:'Ophtalmo (partenaire)',c:0.5,f:'1\u00d7/2 ans'}
+      ]);
+    }
+
+    // Santé enfants
+    if(S.kids>0){
+      var se=[];
+      for(var i=0;i<S.kids;i++){
+        var a=S.ages[i]||'school',nn='Enfant '+(i+1);
+        se.push({n:'Dentiste \u2014 '+nn,c:1,f:'1\u00d7/an'});
+        if(a==='baby'){
+          se.push({n:'P\u00e9diatre \u2014 '+nn,c:4,f:'4\u00d7/an'});
+          se.push({n:'Vaccins (s\u00e9rie compl\u00e8te) \u2014 '+nn,c:4,f:'4 injections sur 0\u20133 ans'});
+        }else if(a==='small'){
+          se.push({n:'M\u00e9decin / p\u00e9diatre \u2014 '+nn,c:2,f:'2\u00d7/an'});
+          se.push({n:'Ophtalmo \u2014 '+nn,c:0.5,f:'1\u00d7/2 ans'});
+          se.push({n:'Rappels vaccins (DTP, ROR) \u2014 '+nn,c:2,f:'2 rappels sur 4\u20136 ans'});
+        }else if(a==='school'){
+          se.push({n:'M\u00e9decin \u2014 '+nn,c:1.5,f:'1\u20132\u00d7/an'});
+          se.push({n:'Ophtalmo \u2014 '+nn,c:0.5,f:'1\u00d7/2 ans'});
+        }else{
+          se.push({n:'M\u00e9decin \u2014 '+nn,c:1,f:'1\u00d7/an'});
+          se.push({n:'Ophtalmo \u2014 '+nn,c:0.5,f:'1\u00d7/2 ans'});
+          se.push({n:'Vaccin HPV \u2014 '+nn,c:0.15,f:'2 doses sur 11\u201313 ans'});
+          se.push({n:'Premier suivi gyn\u00e9co \u2014 '+nn,c:0.33,f:'\u00e0 partir de 15\u201316 ans'});
+        }
+      }
+      cat('\u{1f3e5} Sant\u00e9 \u2014 enfants',se);
+    }
+
+    // Administratif
+    var ad=[
+      {n:'Renouvellement assurances (habitation, mutuelle)',c:2,f:'1\u20132\u00d7/an'},
+      {n:'V\u00e9rification CNI / passeports famille',c:1,f:'vigilance annuelle'},
+      {n:'D\u00e9claration imp\u00f4ts',c:1,f:'1\u00d7/an (mai)'},
+      {n:'Taxe fonci\u00e8re / taxe habitation',c:1,f:'1\u00d7/an (octobre)'}
+    ];
+    if(S.car){
+      ad.push({n:'Contr\u00f4le technique voiture',c:0.5,f:'1\u00d7/2 ans'});
+      ad.push({n:'Assurance auto',c:1,f:'1\u00d7/an'});
+    }
+    cat('\u{1f4c4} Administratif',ad);
+
+    // Assistante maternelle (bébés uniquement)
+    var hasBaby=false;
+    for(var b=0;b<S.kids;b++){if(S.ages[b]==='baby')hasBaby=true;}
+    if(hasBaby){
+      cat('\u{1f476} Assistante maternelle',[
+        {n:'Renouvellement / r\u00e9n\u00e9gociation contrat',c:1,f:'1\u00d7/an'},
+        {n:'D\u00e9claration Pajemploi mensuelle',c:12,f:'chaque mois'},
+        {n:'Attestation fiscale \u00e0 r\u00e9cup\u00e9rer',c:1,f:'1\u00d7/an'}
+      ]);
+    }
+
+    // Scolarité
+    if(S.kids>0){
+      var sc=[
+        {n:'Rentr\u00e9e scolaire (fournitures, listes)',c:1,f:'1\u00d7/an'},
+        {n:'R\u00e9unions parents-profs',c:2,f:'2\u00d7/an'},
+        {n:'Kermesse / f\u00eate de l\u2019\u00e9cole',c:1,f:'1\u00d7/an'},
+        {n:'Inscriptions / r\u00e9inscriptions activit\u00e9s',c:S.kids,f:'1\u00d7/an par enfant'}
+      ];
+      // Carte transport scolaire (7 ans et +)
+      var hasSchoolAge=false;
+      for(var s2=0;s2<S.kids;s2++){if(S.ages[s2]==='school'||S.ages[s2]==='teen')hasSchoolAge=true;}
+      if(hasSchoolAge)sc.push({n:'Carte de transport scolaire',c:1,f:'1\u00d7/an'});
+      // Spectacles par enfant
+      sc.push({n:'Spectacles / galas activit\u00e9s',c:S.kids,f:'1\u00d7/an par enfant'});
+      cat('\u{1f393} Scolarit\u00e9 & activit\u00e9s',sc);
+    }
+
+    // Événements
+    var ev=[];
+    for(var j=0;j<S.kids;j++){
+      ev.push({n:'Anniversaire enfant '+(j+1)+' \u2014 famille, amis \u00e9cole, amis proches',c:3,f:'3 \u00e9v\u00e9nements/an'});
+    }
+    if(S.kids>0){
+      ev.push({n:'Vacances scolaires \u00e0 anticiper (5 p\u00e9riodes)',c:5,f:'toutes les ~10 semaines'});
+      ev.push({n:'F\u00eate des m\u00e8res / f\u00eate des p\u00e8res',c:2,f:'2\u00d7/an'});
+    }
+    ev.push({n:'No\u00ebl (cadeaux, organisation, repas)',c:1,f:'1\u00d7/an'});
+    if(S.couple==='couple'){
+      ev.push({n:'Anniversaires des deux adultes du foyer (organisation)',c:2,f:'2\u00d7/an'});
+    } else {
+      ev.push({n:'Votre anniversaire (organisation)',c:1,f:'1\u00d7/an'});
+    }
+    ev.push({n:'P\u00e2ques (organisation, repas)',c:1,f:'1\u00d7/an'});
+    ev.push({n:'Anniversaires adultes proches',c:3,f:'~3/an en moyenne'});
+    cat('\u{1f389} \u00c9v\u00e9nements',ev);
+
+    // Routine
+    var ro=[{n:'Coiffeur (vous)',c:2,f:'2\u00d7/an'}];
+    for(var k=0;k<S.kids;k++){
+      ro.push({n:'Coiffeur \u2014 Enfant '+(k+1),c:4,f:'1\u00d7/trimestre'});
+    }
+    ro.push({n:'Renouvellement ordonnances / contrats r\u00e9guliers',c:1,f:'vigilance annuelle'});
+    ro.push({n:'Contrat / renouvellement femme de m\u00e9nage',c:1,f:'1\u00d7/an'});
+    cat('\u2702\ufe0f Routine',ro);
+
+    // Animal
+    if(S.pet){
+      var an=S.petType==='dog'
+        ?[{n:'Vaccins annuels chien',c:1,f:'1\u00d7/an'},{n:'Vermifuge + antiparasitaire',c:4,f:'tous les 3 mois'},{n:'Visite v\u00e9t\u00e9rinaire (bilan)',c:1,f:'1\u00d7/an'},{n:'Toiletteur',c:4,f:'tous les 3 mois'}]
+        :[{n:'Vaccins annuels',c:1,f:'1\u00d7/an'},{n:'Vermifuge + antiparasitaire',c:2,f:'2\u00d7/an'},{n:'Visite v\u00e9t\u00e9rinaire',c:1,f:'1\u00d7/an'}];
+      cat('\u{1f43e} Animal',an);
+    }
+
+    return{cats:cats,total:Math.round(tot)};
+  }
+  function show(){
+    var res=compute();
+    document.getElementById('sNum').textContent=res.total;
+    var msg='Ce chiffre ne compte pas des t\u00e2ches \u00e0 faire aujourd\u2019hui. Ce sont '+res.total+' responsabilit\u00e9s cycliques que quelqu\u2019un doit surveiller dans votre foyer, qui occupent de l\u2019espace mental en permanence. Que vous les portiez seul(e) ou \u00e0 deux, personne ne devrait avoir \u00e0 les garder en t\u00eate. Il n\u2019existe aucun filet de s\u00e9curit\u00e9 pour \u00e7a : aucun syst\u00e8me qui vous pr\u00e9vient quand quelque chose approche, aucun rappel qui arrive au bon moment. Juste vous, qui devez y penser avant que ce soit trop tard. C\u2019est exactement pour \u00e7a que MiraFlow existe.';document.getElementById('insBody').textContent=msg;
+    var d=document.getElementById('detail');d.innerHTML='';
+    res.cats.forEach(function(cat){
+      var bl=document.createElement('div');bl.className='cat';
+      var hd=document.createElement('div');hd.className='cat-head';
+      var nm=document.createElement('span');nm.className='cat-name';nm.textContent=cat.name;
+      var nb=document.createElement('span');nb.className='cat-n';nb.textContent=Math.round(cat.t)+' éch.';
+      hd.appendChild(nm);hd.appendChild(nb);bl.appendChild(hd);
+      cat.items.forEach(function(it){
+        var row=document.createElement('div');row.className='cat-item';
+        var a=document.createElement('span');a.className='it-name';a.textContent=it.n;
+        var b=document.createElement('span');b.className='it-freq';b.textContent=it.f;
+        row.appendChild(a);row.appendChild(b);bl.appendChild(row);
+      });
+      d.appendChild(bl);
+    });
+    document.getElementById('hiddenScore').value=res.total;
+    document.getElementById('hiddenSituation').value=S.couple==='couple'?'En couple':'Seul(e)';
+    document.getElementById('F').classList.add('gone');
+    document.getElementById('R').classList.add('show');
+    window.scrollTo(0,0);
+    
+    // Formulaire email
+    var form=document.getElementById('leadForm');
+    var success=document.getElementById('emailSuccess');
+    var capture=document.getElementById('emailCapture');
+    var detailLabel=document.getElementById('detailLabel');
+    var detailBlocks=document.getElementById('detail');
+    var pitch=document.querySelector('.pitch');
+    var btnBack=document.getElementById('btnBack');
+    
+    // Cacher détail et pitch au départ
+    detailLabel.style.display='none';
+    detailBlocks.style.display='none';
+    pitch.style.display='none';
+    btnBack.style.display='none';
+    
+    function revealContent(){
+      capture.style.display='none';
+      detailLabel.style.display='block';
+      detailBlocks.style.display='block';
+      pitch.style.display='block';
+      btnBack.style.display='block';
+    }
+    
+    form.addEventListener('submit',function(e){
+      e.preventDefault();
+      var data=new FormData(form);
+      fetch('https://formspree.io/f/maqlpwdb',{method:'POST',body:data,headers:{'Accept':'application/json'}})
+        .then(function(r){
+          if(r.ok){
+            form.style.display='none';
+            success.style.display='block';
+            setTimeout(revealContent,2000);
+          }else{revealContent();}
+        })
+        .catch(function(){revealContent();});
+    });
+    
+  }
+  function reset(){
+    // Reset formulaire
+    document.getElementById('F').classList.remove('gone');
+    document.getElementById('R').classList.remove('show');
+    // Remettre email capture visible
+    var cap=document.getElementById('emailCapture');
+    var frm=document.getElementById('leadForm');
+    var suc=document.getElementById('emailSuccess');
+    var lbl=document.getElementById('detailLabel');
+    var det=document.getElementById('detail');
+    var pit=document.querySelector('.pitch');
+    var bck=document.getElementById('btnBack');
+    if(cap){cap.style.display='block';}
+    if(frm){frm.style.display='block';}
+    if(suc){suc.style.display='none';}
+    if(lbl){lbl.style.display='none';}
+    if(det){det.style.display='none';}
+    if(pit){pit.style.display='none';}
+    if(bck){bck.style.display='none';}
+    window.scrollTo(0,0);
+  }
+  var bg=document.getElementById('btnGo');
+  bg.addEventListener('click',show);bg.addEventListener('touchend',function(e){e.preventDefault();show();});
+  var bb=document.getElementById('btnBack');
+  bb.addEventListener('click',reset);bb.addEventListener('touchend',function(e){e.preventDefault();reset();});
+}();
+</script>
+</body>
+</html>
